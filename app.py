@@ -5,19 +5,34 @@ import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-# Charger le modèle
-best_model_pipeline = joblib.load("best_model_pipeline.joblib")
+# Charger les modèles
+best_model_regression = joblib.load("best_model_regression.joblib")
+best_model_classification = joblib.load("best_model_classification.joblib")
 
 # Interface utilisateur Streamlit
-st.title("Prédiction du Prix des Maisons")
-st.write("Entrez les caractéristiques de la maison pour obtenir une estimation du prix.")
+st.title("Prédiction du Prix d'une Maison ou de sa Catégorie")
 
-# Définir les colonnes d'entrée (ajuste selon ton dataset)
-feature_names = ['area', 'bedrooms', 'bathrooms', 'stories', 'mainroad',
-       'guestroom', 'basement', 'hotwaterheating', 'airconditioning',
-       'parking', 'prefarea', 'furnishingstatus']
+# Choix du type de prédiction
+type_prediction = st.selectbox("Choisissez le type de prédiction :", ["Régression", "Classification"])
+
+# Définir les features en fonction du type de prédiction
+if type_prediction == "Régression":
+    st.subheader("Prédiction du Prix des Maisons")
+    feature_names = ['area', 'bedrooms', 'bathrooms', 'stories', 'mainroad',
+                     'guestroom', 'basement', 'hotwaterheating', 'airconditioning',
+                     'parking', 'prefarea', 'furnishingstatus']
+    model = best_model_regression
+    label = "Prix estimé"
+else:
+    st.subheader("Classification : Maison chère ou non")
+    feature_names = ['area', 'bedrooms', 'bathrooms', 'stories', 'mainroad',
+                     'guestroom', 'basement', 'hotwaterheating', 'airconditioning',
+                     'parking', 'prefarea', 'furnishingstatus']
+    model = best_model_classification
+    label = "Catégorie estimée (1 : Maison chère / 0 : Maison abordable)"
+
+# Entrée des données
 input_data = {}
-
 for col in feature_names:
     input_data[col] = st.number_input(f"{col}", value=0.0)
 
@@ -25,13 +40,9 @@ for col in feature_names:
 input_df = pd.DataFrame([input_data])
 
 # Bouton de prédiction
-def predict_price():
-    prediction = best_model_pipeline.predict(input_df)
-    return prediction[0]
-
 if st.button("Prédire"):
-    result = predict_price()
-    st.write(f"### Prix estimé: {result:,.0f} $")
+    prediction = model.predict(input_df)
+    st.write(f"### {label}: {prediction[0]}")
 
 # Affichage de distributions
 st.subheader("Répartition des prix des maisons")
